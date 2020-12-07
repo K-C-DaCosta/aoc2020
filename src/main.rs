@@ -23,8 +23,11 @@ fn main() {
     // let (_ret , dt ) = execute_timed( || aoc::aoc_4_0(()) );
     // println!("aoc 4_0: finished in {} ms...", dt);
 
-    let (_ret , dt ) = execute_timed( || aoc2020::aoc_5_0(()) );
-    println!("aoc 5_0: finished in {} ms...", dt);
+    // let (_ret , dt ) = execute_timed( || aoc2020::aoc_6_1(()) );
+    // println!("aoc 6_1: finished in {} ms...", dt);
+
+    let (_ret , dt ) = execute_timed( || aoc2020::aoc_7_0(()) );
+    println!("aoc 7_0: finished in {} ms...", dt);
 
     
 }

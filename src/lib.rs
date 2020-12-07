@@ -403,7 +403,7 @@ fn is_valid_record(field_table: &mut HashMap<String, String>, record: &String) -
 
 pub fn aoc_5_0(_in: ()) {
     let raw_text = fs::read_to_string("./in/input5.txt").unwrap();
-    let eval_coordinate = |encode: &str, mut lb:i32, mut ub, lower| -> i32 {
+    let eval_coordinate = |encode: &str, mut lb: i32, mut ub, lower| -> i32 {
         let len = encode.len();
         let mut index = 0;
         let mut chars = encode.chars();
@@ -436,10 +436,7 @@ pub fn aoc_5_0(_in: ()) {
         .map(|line| decode_coord(line, 8, 128))
         .map(|(row, col)| row * 8 + col)
         .collect();
-    let max_seat_id = filled_seats_list
-        .iter()
-        .max()
-        .unwrap();
+    let max_seat_id = filled_seats_list.iter().max().unwrap();
     println!("max_seat id : {}", max_seat_id);
     //part 2
     let mut id_list: Vec<i32> = (0..8 * 128).collect();
@@ -448,10 +445,126 @@ pub fn aoc_5_0(_in: ()) {
         id_list[index as usize] = i32::MAX;
     }
     //look for row with a single empty seat
-    for i in 0..8*128 {
-        if i > 0 && i < 1023 && id_list[i-1] ==  i32::MAX && id_list[i+1]== i32::MAX && id_list[i] != i32::MAX{
-            println!("id:{}",id_list[i]);
+    for i in 0..8 * 128 {
+        if i > 0
+            && i < 1023
+            && id_list[i - 1] == i32::MAX
+            && id_list[i + 1] == i32::MAX
+            && id_list[i] != i32::MAX
+        {
+            println!("id:{}", id_list[i]);
         }
     }
 }
 
+pub fn aoc_6_0(_in: ()) {
+    // let mut yes_table = HashMap::new();
+    let raw_text = fs::read_to_string("./in/input6.txt").unwrap();
+    let mut table = HashMap::new();
+    let groups = raw_text.split("\n\n");
+
+    let group_count = |group: &str, table: &mut HashMap<char, i32>| {
+        let mut unique = 0;
+        table.clear();
+        for c in group.chars().filter(|a| a.is_alphabetic()) {
+            match table.get_mut(&c) {
+                None => {
+                    unique += 1;
+                    table.insert(c, 1);
+                }
+                Some(v) => {
+                    *v += 1;
+                }
+            }
+        }
+        unique
+    };
+
+    let mut total_uniq: i32 = 0;
+    for g in groups {
+        let count = group_count(g, &mut table);
+        println!("count: {}", count);
+        total_uniq += count;
+    }
+
+    println!("total  = {}", total_uniq);
+}
+
+//guesses
+//3171
+pub fn aoc_6_1(_in: ()) {
+    // let mut yes_table = HashMap::new();
+    let raw_text = fs::read_to_string("./in/input6.txt").unwrap();
+    let groups = raw_text.split("\n\n");
+    let group_count = |group: &str| {
+        let mut accum = !0;
+        for person in group.split("\n") {
+            // println!("{}", person);
+            let bit_code: u32 = person
+                .chars()
+                .filter(|c| c.is_alphabetic())
+                .map(|c| 1 << ((c as u8 - b'a') as u32))
+                .sum();
+            accum &= bit_code;
+        }
+        accum.count_ones()
+    };
+    let total_uniq: u32 = groups.map(|g| group_count(g)).sum();
+    println!("total  = {}", total_uniq);
+}
+
+pub fn aoc_7_0(_in: ()) {
+    let raw_text = fs::read_to_string("./in/input7.txt").unwrap();
+    let mut graph: HashMap<&str, Vec<(i32, &str)>> = HashMap::new();
+    let mut verts = Vec::new();
+    for lines in raw_text.lines() {
+        let fields: Vec<_> = lines.split("bags contain ").collect();
+        let vertex = fields[0].trim();
+        let rules = fields[1];
+        verts.push(vertex);
+        graph.insert(vertex, Vec::new());
+
+        let edges = rules
+            .split(",")
+            .flat_map(|s| s.split("bag").filter(|a| a.trim().len() >= 3))
+            .map(|s| s.trim());
+
+        for edge in edges.filter(|s| *s != "no other") {
+            let split_point = edge.find(' ').unwrap();
+            let str_num = &edge[0..split_point];
+            let str_col = &edge[split_point + 1..];
+            let num = str_num.parse().unwrap();
+            let vec = graph.get_mut(&vertex).unwrap();
+            vec.push((num, str_col));
+        }
+    }
+    let part_1 = verts
+        .iter()
+        .map(|&vert| can_fit_shiny_gold(&graph, vert))
+        .filter(|&a| a)
+        .count();
+    let part_2 = shiny_gold_contains(&mut graph, "shiny gold");
+
+    println!("fitcount = {}, total_bag_count = {}", part_1, part_2);
+}
+fn shiny_gold_contains(graph: &HashMap<&str, Vec<(i32, &str)>>, start: &str) -> i32 {
+    let mut count = 0;
+    if let Some(edges) = graph.get(start) {
+        for &(cap, color) in edges.iter() {
+            for _ in 0..cap {
+                count += shiny_gold_contains(graph, color) + 1;
+            }
+        }
+    }
+    return count;
+}
+fn can_fit_shiny_gold(graph: &HashMap<&str, Vec<(i32, &str)>>, start: &str) -> bool {
+    if let Some(edges) = graph.get(start) {
+        for &(_, color) in edges.iter() {
+            if color == "shiny gold" || can_fit_shiny_gold(graph, color) {
+                return true;
+            }
+        }
+    }
+    false
+}

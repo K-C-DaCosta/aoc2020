@@ -7,16 +7,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'aoc'",
+            "name": "Debug unit tests in library 'aoc2020'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=aoc"
+                    "--package=aoc2020"
                 ],
                 "filter": {
-                    "name": "aoc",
+                    "name": "aoc2020",
                     "kind": "lib"
                 }
             },
@@ -26,15 +26,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'aoc'",
+            "name": "Debug executable 'aoc2020'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=aoc",
-                    "--package=aoc"
+                    "--bin=aoc2020",
+                    "--package=aoc2020"
                 ],
                 "filter": {
-                    "name": "aoc",
+                    "name": "aoc2020",
                     "kind": "bin"
                 }
             },
@@ -44,16 +44,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'aoc'",
+            "name": "Debug unit tests in executable 'aoc2020'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=aoc",
-                    "--package=aoc"
+                    "--bin=aoc2020",
+                    "--package=aoc2020"
                 ],
                 "filter": {
-                    "name": "aoc",
+                    "name": "aoc2020",
                     "kind": "bin"
                 }
             },
