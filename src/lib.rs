@@ -1,7 +1,7 @@
 use rayon::prelude::*;
 use scan_fmt::*;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, VecDeque},
     fs,
     io::*,
     iter::*,
@@ -602,23 +602,73 @@ pub fn aoc_8_1(_in: ()) {
         .enumerate()
         .filter(|(_address, opcode)| opcode.is_jmp() || opcode.is_nop())
         .map(|(_addr, _opcode)| (_addr, _opcode));
-    
 
-    let vm_ref = unsafe{ &mut *vm_ptr}; 
-    for (int_addr,int) in mod_code{
-        let original = *int; 
-        for k in 0..2{
+    let vm_ref = unsafe { &mut *vm_ptr };
+    for (int_addr, int) in mod_code {
+        let original = *int;
+        for k in 0..2 {
             let new_int = if k == 0 {
                 int.into_jmp()
-            }else{
+            } else {
                 int.into_nop()
             };
-            vm_ref.code[int_addr] = new_int; 
+            vm_ref.code[int_addr] = new_int;
             // println!("change dump:\n{}\nline:{}\n",&vm,int_addr);
-            if vm_ref.run().is_ok(){
-                println!("SUCCESS: acc:{} pc:{} ",vm.acc,vm.pc);
+            if vm_ref.run().is_ok() {
+                println!("SUCCESS: acc:{} pc:{} ", vm.acc, vm.pc);
             }
         }
         vm_ref.code[int_addr] = original;
+    }
+}
+
+//a stupid brute force solution
+pub fn aoc_9_0(_in: ()) {
+    let raw_text = fs::read_to_string("./in/input9.txt").unwrap();
+    let nums: Vec<u64> = raw_text.lines().map(|a| a.parse().unwrap()).collect();
+
+    let get_first_invalid = |mut nums:Vec<u64>,preamble_size:i32|->Option<u64>{
+        let mut preamble = Vec::new();
+        for _ in 0..preamble_size{
+            let val = nums.remove(0);
+            preamble.push(val);
+        }
+        let is_valid = |preamble:&Vec<_>,val|{
+            let len = preamble.len();
+            for i in 0..len{
+                for j in 0..len{
+                    if i != j && preamble[i] + preamble[j] == val {
+                        return true; 
+                    }       
+                }
+            }
+            return false; 
+        };
+        for &num in nums.iter(){
+            if is_valid(&preamble,num) {
+                preamble.remove(0);
+                preamble.push(num);
+            }else{
+                return Some(num);
+            }
+        }
+        None
+    };    
+    
+    let part1 =  get_first_invalid(nums.clone(),25).unwrap();
+    println!("part 1 : {}",part1);
+
+    for i in 0..nums.len(){
+        for j in 0..nums.len(){
+            if j > i { 
+                let interval = &nums[i..=j];
+                let sum:u64 = interval.iter().sum();
+                if sum == part1 {
+                    let part2:u64 = interval.iter().min().unwrap() +interval.iter().max().unwrap();
+                    println!("(i,j) = ({},{}) and  part2: {}",i,j, part2);
+                    return; 
+                }
+            }
+        }
     }
 }

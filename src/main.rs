@@ -29,11 +29,14 @@ fn main() {
     // let (_ret , dt ) = execute_timed( || aoc2020::aoc_7_0(()) );
     // println!("aoc 7_0: finished in {} ms...", dt);
 
-    let (_ret , dt ) = execute_timed( || aoc2020::aoc_8_0(()) );
-    println!("aoc 8_0: finished in {} ms...", dt);
+    // let (_ret , dt ) = execute_timed( || aoc2020::aoc_8_0(()) );
+    // println!("aoc 8_0: finished in {} ms...", dt);
 
-    let (_ret , dt ) = execute_timed( || aoc2020::aoc_8_1(()) );
-    println!("aoc 8_1: finished in {} ms...", dt);
+    // let (_ret , dt ) = execute_timed( || aoc2020::aoc_8_1(()) );
+    // println!("aoc 8_1: finished in {} ms...", dt);
+
+    let (_ret , dt ) = execute_timed( || aoc2020::aoc_9_0(()) );
+    println!("aoc 9_0: finished in {} ms...", dt);
 
     
 }
