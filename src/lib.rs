@@ -9,8 +9,10 @@ use std::{
 };
 
 pub mod collections;
+pub mod console_vm;
 
 use collections::bitarray::*;
+use console_vm::{GameConsoleVM, Instruction, TerminationError};
 
 pub fn execute_timed<F, Fout>(mut proc: F) -> (Fout, u128)
 where
@@ -23,7 +25,7 @@ where
 }
 
 pub fn aoc_1_0(target: i64) -> Option<i64> {
-    let f = BufReader::new(fs::File::open("./in/input1_big.txt").unwrap());
+    let f = BufReader::new(fs::File::open("./in/input1.txt").unwrap());
     let mut val_table: HashSet<_> = HashSet::new();
 
     for line_res in f
@@ -92,7 +94,7 @@ pub fn aoc_1_1(target: i64) -> Option<i64> {
 }
 
 pub fn aoc_2_0(_in: ()) -> std::result::Result<(), std::io::Error> {
-    let file = BufReader::new(fs::File::open("./in/input2_bb.txt").unwrap());
+    let file = BufReader::new(fs::File::open("./in/input2.txt").unwrap());
     let mut table = HashMap::new();
     let mut valid_passwords = 0;
     let mut total_passwords = 0;
@@ -514,38 +516,49 @@ pub fn aoc_6_1(_in: ()) {
 }
 
 pub fn aoc_7_0(_in: ()) {
-    let raw_text = fs::read_to_string("./in/input7.txt").unwrap();
+    let raw_text = fs::read_to_string("./in/input7bbo.txt").unwrap();
     let mut graph: HashMap<&str, Vec<(i32, &str)>> = HashMap::new();
     let mut verts = Vec::new();
-    for lines in raw_text.lines() {
-        let fields: Vec<_> = lines.split("bags contain ").collect();
+    for (k, line) in raw_text.lines().enumerate() {
+        let fields: Vec<_> = line.split("bags contain ").collect();
         let vertex = fields[0].trim();
         let rules = fields[1];
         verts.push(vertex);
         graph.insert(vertex, Vec::new());
 
-        let edges = rules
-            .split(",")
-            .flat_map(|s| s.split("bag").filter(|a| a.trim().len() >= 3))
-            .map(|s| s.trim());
+        let edges = rules.split(",").map(|s| s.trim());
 
-        for edge in edges.filter(|s| *s != "no other") {
-            let split_point = edge.find(' ').unwrap();
-            let str_num = &edge[0..split_point];
-            let str_col = &edge[split_point + 1..];
+        for edge in edges.filter(|s| s.contains("no other bag") == false) {
+            let edge_len = edge.len();
+            let fs_loc = edge.find(' ').unwrap();
+            let ss_loc = edge
+                .chars()
+                .rev()
+                .enumerate()
+                .filter(|&(_, c)| c == ' ')
+                .map(|(i, _)| i)
+                .next()
+                .unwrap();
+            let str_num = &edge[0..fs_loc];
+            let str_col = &edge[fs_loc + 1..edge_len - ss_loc - 1];
+            // println!("({},{})", str_num, str_col);
+
             let num = str_num.parse().unwrap();
             let vec = graph.get_mut(&vertex).unwrap();
             vec.push((num, str_col));
         }
     }
+    println!("graph loaded...");
+
     let part_1 = verts
         .iter()
         .map(|&vert| can_fit_shiny_gold(&graph, vert))
         .filter(|&a| a)
         .count();
-    let part_2 = shiny_gold_contains(&mut graph, "shiny gold");
+    println!("fitcount = {}", part_1);
 
-    println!("fitcount = {}, total_bag_count = {}", part_1, part_2);
+    let part_2 = shiny_gold_contains(&mut graph, "shiny gold");
+    println!("total_bag_count = {}", part_2);
 }
 fn shiny_gold_contains(graph: &HashMap<&str, Vec<(i32, &str)>>, start: &str) -> i32 {
     let mut count = 0;
@@ -567,4 +580,45 @@ fn can_fit_shiny_gold(graph: &HashMap<&str, Vec<(i32, &str)>>, start: &str) -> b
         }
     }
     false
+}
+
+pub fn aoc_8_0(_in: ()) {
+    let raw_text = fs::read_to_string("./in/input8.txt").unwrap();
+    let mut vm = GameConsoleVM::new();
+    vm.parse_text_code(raw_text);
+    if let Err(TerminationError::CycleDetected) = vm.run() {
+        println!("cycle detected! pc:{},acc:{} ", vm.pc, vm.acc);
+    }
+}
+pub fn aoc_8_1(_in: ()) {
+    let raw_text = fs::read_to_string("./in/input8.txt").unwrap();
+    let mut vm = GameConsoleVM::new();
+    let vm_ptr = &mut vm as *mut GameConsoleVM;
+    vm.parse_text_code(raw_text);
+
+    let mod_code = vm
+        .code
+        .iter_mut()
+        .enumerate()
+        .filter(|(_address, opcode)| opcode.is_jmp() || opcode.is_nop())
+        .map(|(_addr, _opcode)| (_addr, _opcode));
+    
+
+    let vm_ref = unsafe{ &mut *vm_ptr}; 
+    for (int_addr,int) in mod_code{
+        let original = *int; 
+        for k in 0..2{
+            let new_int = if k == 0 {
+                int.into_jmp()
+            }else{
+                int.into_nop()
+            };
+            vm_ref.code[int_addr] = new_int; 
+            // println!("change dump:\n{}\nline:{}\n",&vm,int_addr);
+            if vm_ref.run().is_ok(){
+                println!("SUCCESS: acc:{} pc:{} ",vm.acc,vm.pc);
+            }
+        }
+        vm_ref.code[int_addr] = original;
+    }
 }
