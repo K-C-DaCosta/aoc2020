@@ -626,49 +626,49 @@ pub fn aoc_8_1(_in: ()) {
 pub fn aoc_9_0(_in: ()) {
     let raw_text = fs::read_to_string("./in/input9.txt").unwrap();
     let nums: Vec<u64> = raw_text.lines().map(|a| a.parse().unwrap()).collect();
-
-    let get_first_invalid = |mut nums:Vec<u64>,preamble_size:i32|->Option<u64>{
+    let get_first_invalid = |mut nums: Vec<_>, preamble_size| -> Option<u64> {
         let mut preamble = Vec::new();
-        for _ in 0..preamble_size{
+        for _ in 0..preamble_size {
             let val = nums.remove(0);
             preamble.push(val);
         }
-        let is_valid = |preamble:&Vec<_>,val|{
+        let is_valid = |preamble: &Vec<_>, val| {
             let len = preamble.len();
-            for i in 0..len{
-                for j in 0..len{
-                    if i != j && preamble[i] + preamble[j] == val {
-                        return true; 
-                    }       
+            for i in 0..len {
+                for j in i+1..len {
+                    if preamble[i] + preamble[j] == val {
+                        return true;
+                    }
                 }
             }
-            return false; 
+            return false;
         };
-        for &num in nums.iter(){
-            if is_valid(&preamble,num) {
+        for &num in nums.iter() {
+            if is_valid(&preamble, num) == false {
+                return Some(num);
+            } else {
                 preamble.remove(0);
                 preamble.push(num);
-            }else{
-                return Some(num);
             }
         }
         None
-    };    
-    
-    let part1 =  get_first_invalid(nums.clone(),25).unwrap();
-    println!("part 1 : {}",part1);
-
-    for i in 0..nums.len(){
-        for j in 0..nums.len(){
-            if j > i { 
+    };
+    let find_weakness = |nums: Vec<_>, part1| {
+        for i in 0..nums.len() {
+            for j in i + 1..nums.len() {
                 let interval = &nums[i..=j];
-                let sum:u64 = interval.iter().sum();
+                let sum: u64 = interval.iter().sum();
                 if sum == part1 {
-                    let part2:u64 = interval.iter().min().unwrap() +interval.iter().max().unwrap();
-                    println!("(i,j) = ({},{}) and  part2: {}",i,j, part2);
-                    return; 
+                    let part2: u64 =
+                        interval.iter().min().unwrap() + interval.iter().max().unwrap();
+                    return Some(part2);
                 }
             }
         }
-    }
+        None
+    };
+    let part1 = get_first_invalid(nums.clone(), 25).unwrap();
+    let part2 = find_weakness(nums, part1).unwrap();
+    println!("part 1 : {}", part1);
+    println!("part 2 : {}", part2);
 }
